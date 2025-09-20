@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Crypto Leverage Profit Calculator</title>
+<style>
+  :root{
+    --bg:#0f1724;
+    --card:#0b1220;
+    --accent: #6ee7b7;
+    --muted:#98a0b3;
+    --danger:#ff6b6b;
+    --glass: rgba(255,255,255,0.03);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  }
+
+  html,body{height:100%;margin:0;background:linear-gradient(180deg,#061026 0%, #071428 60%);color:#e6eef8}
+  .wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+  }
+
+  .card{
+    width:100%;
+    max-width:900px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:12px;
+    padding:20px;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+    border:1px solid rgba(255,255,255,0.03);
+    display:grid;
+    grid-template-columns: 1fr 360px;
+    gap:18px;
+    align-items:start;
+  }
+
+  h1{font-size:20px;margin:0 0 8px 0; color:var(--accent)}
+  p.lead{margin:0 0 16px 0;color:var(--muted);font-size:13px}
+
+  .controls{
+    padding:12px;
+    background:var(--card);
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+  .row{display:flex;gap:8px}
+  .field{margin-bottom:12px}
+  input[type="number"], input[type="text"], select{
+    width:100%;
+    padding:10px 12px;
+    border-radius:8px;
+    background:var(--glass);
+    border:1px solid rgba(255,255,255,0.03);
+    color:inherit;
+    font-size:14px;
+    outline:none;
+    box-sizing:border-box;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:linear-gradient(90deg, rgba(110,231,183,0.12), rgba(110,231,183,0.06));
+    color:var(--accent);
+    border:1px solid rgba(110,231,183,0.14);
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn.secondary{
+    background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)
+  }
+
+  .results{
+    padding:16px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,0.02);
+    min-height:220px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .stat{
+    display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:8px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    border:1px solid rgba(255,255,255,0.02);
+  }
+
+  .big{font-size:18px;font-weight:700}
+  .muted{color:var(--muted);font-size:13px}
+
+  .profit{color:#22c55e;} /* green */
+  .loss{color:#ef4444;}   /* red */
+  .tiny{font-size:12px;color:var(--muted)}
+
+  footer{grid-column:1/-1;padding-top:8px;text-align:center;color:var(--muted);font-size:12px}
+
+  @media (max-width:880px){
+    .card{grid-template-columns:1fr; padding:12px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div>
+      <h1>Crypto Leverage Profit Calculator</h1>
+      <p class="lead">Enter your capital, leverage and coin prices — see coins controlled, profit/loss and % return on your capital.</p>
+
+      <div class="controls">
+        <div class="field">
+          <label>Investment (your money) — ₹</label>
+          <input id="investment" type="number" min="0" step="0.01" value="2000" />
+        </div>
+
+        <div class="row">
+          <div class="field" style="flex:1">
+            <label>Leverage (e.g., 5 for 5x)</label>
+            <input id="leverage" type="number" min="1" step="1" value="10" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field" style="flex:1">
+            <label>Entry price (per coin) — ₹</label>
+            <input id="entryPrice" type="number" min="0.00000001" step="0.00000001" value="0.80" />
+          </div>
+          <div class="field" style="flex:1">
+            <label>Exit price (per coin) — ₹</label>
+            <input id="exitPrice" type="number" min="0.00000001" step="0.00000001" value="1.00" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+          <button id="calcBtn" class="btn">Calculate</button>
+          <button id="resetBtn" class="btn secondary">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="results" id="results">
+        <div class="stat">
+          <div class="muted">Effective capital</div>
+          <div class="big" id="effectiveCapital">—</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Coins controlled</div>
+          <div class="big" id="coins">—</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Exit value</div>
+          <div class="big" id="exitValue">—</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Profit / Loss</div>
+          <div class="big" id="profit">—</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Return on your capital</div>
+          <div class="big" id="roi">—</div>
+        </div>
+      </div>
+	<footer>
+  	Simple leverage calculator — profit shows green, loss shows red.
+  	<small>© 2025 cryptorisetoday.com</small>
+</footer>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const format = (n, dp=2) => {
+    if (!isFinite(n)) return '—';
+    return Number(n).toLocaleString(undefined, {minimumFractionDigits: dp, maximumFractionDigits: dp});
+  };
+
+  function compute(){
+    const inv = parseFloat($('investment').value) || 0;
+    const lev = parseFloat($('leverage').value) || 1;
+    const entry = parseFloat($('entryPrice').value) || 0;
+    const exitPrice = parseFloat($('exitPrice').value) || 0;
+
+    if (entry <= 0 || inv <= 0 || lev <= 0 || exitPrice <= 0) {
+      showResultsNaN();
+      return;
+    }
+
+    const effectiveCapital = inv * lev;
+    const coins = effectiveCapital / entry;
+    const exitValue = coins * exitPrice;
+    const profit = exitValue - effectiveCapital;
+    const roi = (profit / inv) * 100;
+
+    $('effectiveCapital').textContent = '₹ ' + format(effectiveCapital,2);
+    $('coins').textContent = format(coins,6);
+    $('exitValue').textContent = '₹ ' + format(exitValue,2);
+
+    const profEl = $('profit');
+    profEl.textContent = (profit >= 0 ? '+₹ ' : '−₹ ') + format(Math.abs(profit),2);
+    profEl.className = 'big ' + (profit >= 0 ? 'profit' : 'loss');
+
+    const roiEl = $('roi');
+    roiEl.textContent = format(roi,2) + ' %';
+    roiEl.className = 'big ' + (profit >= 0 ? 'profit' : 'loss');
+  }
+
+  function showResultsNaN(){
+    ['effectiveCapital','coins','exitValue','profit','roi'].forEach(id=>{
+      $(id).textContent = '—';
+    });
+  }
+
+  $('calcBtn').addEventListener('click', compute);
+  $('resetBtn').addEventListener('click', ()=>{
+    $('investment').value = '2000';
+    $('leverage').value = '10';
+    $('entryPrice').value = '0.80';
+    $('exitPrice').value = '1.00';
+    compute();
+  });
+
+  compute();
+</script>
+</body>
+</html>
