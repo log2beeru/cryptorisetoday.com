@@ -119,24 +119,24 @@
       <div class="controls">
         <div class="field">
           <label>Investment (your money) — ₹</label>
-          <input id="investment" type="number" min="0" step="0.01" value="2000" />
+          <input id="investment" type="number" min="0" step="0.01" placeholder="Enter amount" />
         </div>
 
         <div class="row">
           <div class="field" style="flex:1">
             <label>Leverage (e.g., 5 for 5x)</label>
-            <input id="leverage" type="number" min="1" step="1" value="10" />
+            <input id="leverage" type="number" min="1" step="1" placeholder="Leverage" />
           </div>
         </div>
 
         <div class="row">
           <div class="field" style="flex:1">
             <label>Entry price (per coin) — ₹</label>
-            <input id="entryPrice" type="number" min="0.00000001" step="0.00000001" value="0.80" />
+            <input id="entryPrice" type="number" min="0.00000001" step="0.00000001" placeholder="Entry price" />
           </div>
           <div class="field" style="flex:1">
             <label>Exit price (per coin) — ₹</label>
-            <input id="exitPrice" type="number" min="0.00000001" step="0.00000001" value="1.00" />
+            <input id="exitPrice" type="number" min="0.00000001" step="0.00000001" placeholder="Exit price" />
           </div>
         </div>
 
@@ -192,7 +192,7 @@
 
   function compute(){
     const inv = parseFloat($('investment').value) || 0;
-    const lev = parseFloat($('leverage').value) || 1;
+    const lev = parseFloat($('leverage').value) || 0;
     const entry = parseFloat($('entryPrice').value) || 0;
     const exitPrice = parseFloat($('exitPrice').value) || 0;
 
@@ -228,14 +228,15 @@
 
   $('calcBtn').addEventListener('click', compute);
   $('resetBtn').addEventListener('click', ()=>{
-    $('investment').value = '2000';
-    $('leverage').value = '10';
-    $('entryPrice').value = '0.80';
-    $('exitPrice').value = '1.00';
-    compute();
+    $('investment').value = '';
+    $('leverage').value = '';
+    $('entryPrice').value = '';
+    $('exitPrice').value = '';
+    showResultsNaN();
   });
 
-  compute();
+  // Start with blank results
+  showResultsNaN();
 </script>
 </body>
 </html>
