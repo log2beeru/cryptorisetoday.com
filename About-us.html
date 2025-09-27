@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>📊 About Us - CryptoRiseToday</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(180deg,#061026 0%, #071428 60%);
+      color: #e6eef8;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      overflow-x: hidden;
+      position: relative;
+    }
+    nav.navbar { z-index: 1100; }
+
+    .hero {
+      padding: 60px 20px;
+      text-align: center;
+      background: rgba(0,0,0,0.28);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      position: relative;
+      z-index: 1200;
+    }
+    .hero h1 { color: #6ee7b7; font-weight: 700; }
+    .hero p { color: #dbe7f5; max-width: 700px; margin: 10px auto 0; }
+
+    .section { padding: 50px 20px; position: relative; z-index: 1200; }
+    .card { background: rgba(0,0,0,0.45); border-radius: 12px; padding: 20px; color: #e6eef8; }
+    .disclaimer { background: rgba(239,68,68,0.14); border:1px solid rgba(239,68,68,0.35); padding:20px; border-radius:12px; color:#ffe4e4; }
+
+    footer { text-align:center; padding:20px; color:#98a0b3; font-size:14px; border-top:1px solid rgba(255,255,255,0.06); margin-top:40px; position:relative; z-index:1200; }
+
+    /* Peacock Spreading Feature */
+    .peacock-fan {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 760px;
+      height: 420px;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      z-index: 1000;
+      user-select: none;
+    }
+    .peacock-feather {
+      width: 86px;
+      height: 300px;
+      margin: 0 -16px;
+      transform-origin: bottom center;
+      border-radius: 48% 48% 50% 50% / 70% 70% 30% 30%;
+      background:
+        radial-gradient(circle at 50% 28%, rgba(255,255,255,0.90) 3%, rgba(255,255,255,0.06) 4%, transparent 5%),
+        radial-gradient(circle at 50% 42%, #06b6d4 7%, #0ea5b7 12%, transparent 16%),
+        radial-gradient(circle at 52% 60%, #0ea5b7 14%, #0369a1 30%, #6610f2 60%, transparent 65%),
+        linear-gradient(180deg, rgba(18,38,71,0.18), rgba(2,6,23,0.35));
+      box-shadow: 0 12px 30px rgba(2,6,23,0.6), inset 0 -6px 20px rgba(0,0,0,0.35);
+      opacity: 0;
+      transform: scaleY(0) rotate(0deg);
+    }
+    .peacock-feather.f1 { --angle: -70deg; transform: rotate(var(--angle)) scaleY(0); }
+    .peacock-feather.f2 { --angle: -50deg; transform: rotate(var(--angle)) scaleY(0); }
+    .peacock-feather.f3 { --angle: -30deg; transform: rotate(var(--angle)) scaleY(0); }
+    .peacock-feather.f4 { --angle: -10deg; transform: rotate(var(--angle)) scaleY(0); }
+    .peacock-feather.f5 { --angle:  10deg; transform: rotate(var(--angle)) scaleY(0); }
+    .peacock-feather.f6 { --angle:  30deg; transform: rotate(var(--angle)) scaleY(0); }
+    .peacock-feather.f7 { --angle:  50deg; transform: rotate(var(--angle)) scaleY(0); }
+    .peacock-feather.f8 { --angle:  70deg; transform: rotate(var(--angle)) scaleY(0); }
+
+    @keyframes fanSpread {
+      0%   { transform: rotate(var(--angle)) scaleY(0); opacity: 0; }
+      25%  { transform: rotate(var(--angle)) scaleY(1.08); opacity: 1; }
+      45%  { transform: rotate(var(--angle)) scaleY(0.98); opacity: 1; }
+      70%  { transform: rotate(var(--angle)) scaleY(0.98); opacity: 1; }
+      100% { transform: rotate(var(--angle)) scaleY(0); opacity: 0; }
+    }
+    .peacock-feather {
+      animation-name: fanSpread;
+      animation-duration: 6.5s;
+      animation-timing-function: cubic-bezier(.2,.9,.3,1);
+      animation-iteration-count: infinite;
+      animation-fill-mode: both;
+    }
+    .peacock-feather.f1 { animation-delay: 0.05s; }
+    .peacock-feather.f2 { animation-delay: 0.18s; }
+    .peacock-feather.f3 { animation-delay: 0.35s; }
+    .peacock-feather.f4 { animation-delay: 0.50s; }
+    .peacock-feather.f5 { animation-delay: 0.65s; }
+    .peacock-feather.f6 { animation-delay: 0.82s; }
+    .peacock-feather.f7 { animation-delay: 0.98s; }
+    .peacock-feather.f8 { animation-delay: 1.12s; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark" style="background:#0b1220;">
+  <div class="container-fluid">
+    <!-- 📊 logo added -->
+    <a class="navbar-brand" href="index.html">📊 CryptoRiseToday</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="index.html">Top Losers</a></li>
+        <li class="nav-item"><a class="nav-link" href="crypto-leverage-calculator.html">Calculator</a></li>
+        <li class="nav-item"><a class="nav-link" href="prediction.html">Prediction</a></li>
+        <li class="nav-item"><a class="nav-link active" href="about-us.html">About Us</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>About CryptoRiseToday</h1>
+  <p>We provide simple, reliable, and transparent tools to track the rise and fall of cryptocurrencies.  
+     From top gainers and losers to leverage profit calculators, we help traders make smarter decisions.</p>
+</div>
+
+<!-- Our Mission -->
+<div class="section container">
+  <h2>🚀 Our Mission</h2>
+  <div class="card">
+    <p>
+      Our mission is to empower crypto enthusiasts, traders, and investors with real-time insights, 
+      easy-to-use calculators, and AI-driven predictions.  
+      We believe that access to clear, data-driven information makes the crypto world less confusing and more rewarding.
+    </p>
+  </div>
+</div>
+
+<!-- What We Offer -->
+<div class="section container">
+  <h2>💡 What We Offer</h2>
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card h-100">
+        <h5>📊 Top Gainers & Losers</h5>
+        <p>Track the fastest rising and falling coins to identify opportunities and risks in real time.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <h5>⚖️ Leverage Calculator</h5>
+        <p>Simulate leveraged trades to understand potential profits or losses before you invest.</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card h-100">
+        <h5>🧠 AI Predictions</h5>
+        <p>Coming soon: Machine learning models to provide coin rise and fall predictions with data-driven signals.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Contact -->
+<div class="section container">
+  <h2>📬 Contact Us</h2>
+  <div class="card">
+    <p>If you have any questions, feedback, or collaboration requests, feel free to reach out:</p>
+    <ul>
+      <li>Email: <a href="mailto:log2beeru@gmail.com">log2beeru@gmail.com</a></li>
+      <li>Website: <a href="https://www.cryptorisetoday.com" target="_blank">cryptorisetoday.com</a></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Disclaimer -->
+<div class="section container">
+  <h2>⚠️ Disclaimer</h2>
+  <div class="disclaimer">
+    We do not support fraud, scams, or misleading activities.  
+    Cryptocurrency trading is risky — always do your own research before making any investment or trade decisions.  
+    CryptoRiseToday is for educational and informational purposes only.
+  </div>
+</div>
+
+<!-- Peacock Spreading Fan -->
+<div class="peacock-fan" aria-hidden="true">
+  <div class="peacock-feather f1"></div>
+  <div class="peacock-feather f2"></div>
+  <div class="peacock-feather f3"></div>
+  <div class="peacock-feather f4"></div>
+  <div class="peacock-feather f5"></div>
+  <div class="peacock-feather f6"></div>
+  <div class="peacock-feather f7"></div>
+  <div class="peacock-feather f8"></div>
+</div>
+
+<!-- Footer -->
+<footer>
+  © 2025 📊 CryptoRiseToday — All rights reserved.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
