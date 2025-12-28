@@ -1,86 +1,167 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Private Chat</title>
 
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b141a;color:#fff}
-#login{height:100vh;display:flex;align-items:center;justify-content:center}
-#chat{display:none;height:100vh;flex-direction:column}
-.box{background:#202c33;padding:20px;border-radius:10px;width:90%;max-width:360px}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Arial;background:#0b141a;color:#fff}
+#login,#chat{height:100vh}
+#login{display:flex;align-items:center;justify-content:center}
+.login{background:#202c33;padding:20px;border-radius:12px;width:90%;max-width:360px}
+.login input,.login button{width:100%;padding:12px;font-size:16px;border:none;border-radius:8px}
+.login button{background:#00a884;margin-top:10px}
+
+#chat{display:none;flex-direction:column}
 .header{background:#202c33;padding:10px;text-align:center}
-.messages{flex:1;padding:10px;overflow-y:auto}
-.bubble{max-width:70%;padding:8px 12px;margin:6px;border-radius:8px}
+.status{font-size:12px;color:#9da3a6}
+.messages{flex:1;padding:10px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.bubble{max-width:75%;padding:10px 14px;margin:6px 0;border-radius:12px}
 .me{background:#005c4b;margin-left:auto}
-.other{background:#202c33}
+.other{background:#202c33;margin-right:auto}
+.typing{font-size:12px;color:#9da3a6;padding-left:10px}
 .footer{display:flex;padding:8px;background:#202c33}
-.footer input{flex:1;padding:10px;border:none;border-radius:20px}
-.footer button{margin-left:6px;border:none;padding:10px 14px;border-radius:50%;background:#00a884}
+.footer input{flex:1;padding:10px;font-size:16px;border:none;border-radius:20px}
+.footer button{width:44px;height:44px;margin-left:6px;border:none;border-radius:50%;background:#00a884;font-size:18px}
+input:focus{outline:none}
 </style>
 </head>
 
 <body>
 
 <div id="login">
-  <div class="box">
-    <h3>Private Chat</h3>
-    <input id="pass" type="password" placeholder="Password"
-      style="width:100%;padding:10px">
-    <br><br>
-    <button id="enter"
-      style="width:100%;padding:10px;background:#00a884;border:none">
-      Enter
-    </button>
+  <div class="login">
+    <h3 style="text-align:center">Private Chat</h3>
+    <input id="pass" type="password" placeholder="Enter Password">
+    <button id="enterBtn">Enter</button>
   </div>
 </div>
 
 <div id="chat">
-  <div class="header">Private Chat</div>
+  <div class="header">
+    Private Chat<br>
+    <span class="status" id="status">Waiting…</span>
+  </div>
   <div class="messages" id="messages"></div>
+  <div class="typing" id="typing"></div>
   <div class="footer">
-    <input id="msg" placeholder="Type message">
-    <button id="send">➤</button>
+    <input id="msg" placeholder="Type a message">
+    <button id="sendBtn">➤</button>
   </div>
 </div>
 
 <script>
-/* FIREBASE CONFIG */
-const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+document.addEventListener("DOMContentLoaded", () => {
 
-/* FIXED SETTINGS */
-const PASSWORD = "12345";
-const ROOM_PATH = "chats/fixed_private_room"; // 🔴 SAME FOR ALL USERS
+  /* 🔧 FIREBASE */
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-const userId = "user_" + Math.floor(Math.random()*100000);
-const roomRef = db.ref(ROOM_PATH);
+  /* SETTINGS */
+  const PASSWORD = "12345";
+  const ROOM = "private_chat_room";
 
-/* ELEMENTS */
-const login = document.getElementById("login");
-const chat = document.getElementById("chat");
-const pass = document.getElementById("pass");
-const messages = document.getElementById("messages");
-const msg = document.getElementById("msg");
+  /* USER */
+  const userId = "user_" + Math.floor(Math.random()*1000000);
+  const roomRef = db.ref("rooms/" + ROOM);
+  const usersRef = roomRef.child("users");
+  const typingRef = roomRef.child("typing");
 
-/* ENTER */
-document.getElementById("enter").addEventListener("click", ()=>{
-  if(pass.value !== PASSWORD){
-    alert("Wrong password");
-    return;
+  /* ELEMENTS */
+  const login = document.getElementById("login");
+  const chat = document.getElementById("chat");
+  const pass = document.getElementById("pass");
+  const msg = document.getElementById("msg");
+  const messages = document.getElementById("messages");
+  const status = document.getElementById("status");
+  const typing = document.getElementById("typing");
+  const enterBtn = document.getElementById("enterBtn");
+  const sendBtn = document.getElementById("sendBtn");
+
+  /* JOIN */
+  function joinChat(){
+    if(pass.value.trim() !== PASSWORD){
+      alert("Wrong password");
+      return;
+    }
+
+    usersRef.once("value").then(snap=>{
+      if(snap.numChildren() >= 2){
+        alert("Only 2 users allowed");
+        return;
+      }
+
+      login.style.display="none";
+      chat.style.display="flex";
+
+      usersRef.child(userId).set(true);
+      usersRef.child(userId).onDisconnect().remove();
+
+      usersRef.on("value", s=>{
+        status.textContent = s.numChildren() === 2 ? "Online" : "Waiting…";
+      });
+
+      roomRef.child("messages").limitToLast(100)
+        .on("child_added", s=>{
+          const m=s.val();
+          const d=document.createElement("div");
+          d.className="bubble " + (m.user===userId?"me":"other");
+          d.textContent=m.text;
+          messages.appendChild(d);
+          messages.scrollTop=messages.scrollHeight;
+        });
+
+      typingRef.on("value", s=>{
+        typing.textContent =
+          s.val() && s.val()!==userId ? "Typing…" : "";
+      });
+    });
   }
 
-  login.style.display="none";
-  chat.style.display="flex";
+  /* SEND */
+  function sendMessage(){
+    if(!msg.value.trim()) return;
+    roomRef.child("messages").push({
+      user:userId,
+      text:msg.value,
+      time:Date.now()
+    });
+    msg.value="";
+    typingRef.set("");
+  }
 
-  // 🔴 LISTENER A
+  /* EVENTS */
+  enterBtn.addEventListener("click", joinChat);
+  sendBtn.addEventListener("click", sendMessage);
+
+  pass.addEventListener("keydown", e=>{
+    if(e.key==="Enter"){ e.preventDefault(); joinChat(); }
+  });
+
+  msg.addEventListener("input", ()=>{
+    typingRef.set(userId);
+    setTimeout(()=>typingRef.set(""),800);
+  });
+
+  msg.addEventListener("keydown", e=>{
+    if(e.key==="Enter"){ e.preventDefault(); sendMessage(); }
+  });
+
+});
+</script>
+
+</body>
+</html>
