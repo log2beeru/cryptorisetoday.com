@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Crypto 1H Probability Engine</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    margin:0;padding:20px;min-height:100vh;
+    background:#0f172a;color:#f8fafc;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
+}
+.container{max-width:600px;margin:auto}
+.card{
+    background:#1e293b;border:1px solid #334155;
+    border-radius:14px;padding:20px;margin-bottom:15px
+}
+.header{display:flex;justify-content:space-between;align-items:center}
+h2{margin:0;color:#38bdf8;font-size:21px}
+.badge{padding:5px 10px;border-radius:15px;font-size:11px;font-weight:bold}
+.live{background:#064e3b;color:#34d399}
+.offline{background:#7f1d1d;color:#f87171}
+.loading{background:#422006;color:#facc15}
+
+
+
+label{display:block;color:#94a3b8;font-size:12px;margin:15px 0 5px}
+select{
+    width:100%;padding:11px;background:#0f172a;color:white;
+    border:1px solid #475569;border-radius:7px;font-size:15px
+}
+.price{
+    margin-top:15px;padding:18px;text-align:center;
+    background:#0f172a;border-radius:10px
+}
+.price-label{font-size:12px;color:#94a3b8}
+.price-value{font-size:32px;font-weight:bold;color:#38bdf8;margin-top:5px}
+
+.title{
+    color:#38bdf8;font-size:14px;font-weight:bold;
+    text-transform:uppercase;margin-bottom:12px
+}
+.forecast{
+    background:#0f172a;border:1px solid #475569;
+    border-radius:12px;padding:18px;text-align:center
+}
+.direction{font-size:27px;font-weight:bold}
+.probability{font-size:42px;font-weight:bold;margin:5px}
+.green{color:#22c55e}
+.red{color:#ef4444}
+.yellow{color:#facc15}
+.blue{color:#38bdf8}
+
+.bar{
+    height:15px;background:#ef4444;
+    border-radius:20px;overflow:hidden;margin:14px 0
+}
+.rise-bar{
+    height:100%;background:#22c55e;
+    width:50%;transition:.4s
+}
+.grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px
+}
+.metric{
+    background:#0f172a;border:1px solid #334155;
+    border-radius:9px;padding:12px;text-align:center
+}
+.metric-label{font-size:10px;color:#94a3b8}
+.metric-value{font-size:20px;font-weight:bold;margin-top:5px}
+.signal{
+    padding:12px;text-align:center;border-radius:8px;
+    margin-top:12px;font-weight:bold
+}
+.trade{background:#064e3b;color:#34d399}
+.no-trade{background:#422006;color:#facc15}
+.row{
+    display:flex;justify-content:space-between;
+    padding:8px 0;border-bottom:1px dashed #334155;
+    font-size:13px
+}
+.score{text-align:center;font-size:27px;font-weight:bold;margin-top:12px}
+.small{font-size:11px;color:#94a3b8;line-height:1.5;margin-top:10px}
+.timer{font-size:12px;color:#94a3b8;margin-top:6px}
+button{
+    width:100%;padding:12px;border:0;border-radius:7px;
+    background:#2563eb;color:white;font-weight:bold
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+    <div class="header">
+        <h2>Live Crypto 1H Engine</h2>
+        <span id="status" class="badge loading">LOADING</span>
+    </div>
+
+    <label>Select Futures Contract</label>
+
+    <select id="symbol">
+        <option value="BTCUSDT">BTC / USDT</option>
+        <option value="ETHUSDT">ETH / USDT</option>
+        <option value="SOLUSDT">SOL / USDT</option>
+        <option value="XRPUSDT">XRP / USDT</option>
+        <option value="BNBUSDT">BNB / USDT</option>
+        <option value="DOGEUSDT">DOGE / USDT</option>
+        <option value="ADAUSDT">ADA / USDT</option>
+        <option value="AVAXUSDT">AVAX / USDT</option>
+        <option value="LINKUSDT">LINK / USDT</option>
+        <option value="SUIUSDT">SUI / USDT</option>
+        <option value="LTCUSDT">LTC / USDT</option>
+        <option value="BCHUSDT">BCH / USDT</option>
+        <option value="SHIBUSDT">SHIB / USDT</option>
+        <option value="PEPEUSDT">PEPE / USDT</option>
+        <option value="WIFUSDT">WIF / USDT</option>
+        <option value="UNIUSDT">UNI / USDT</option>
+        <option value="AAVEUSDT">AAVE / USDT</option>
+        <option value="FILUSDT">FIL / USDT</option>
+        <option value="ICPUSDT">ICP / USDT</option>
+        <option value="XLMUSDT">XLM / USDT</option>
+    </select>
+
+    <div class="price">
+        <div class="price-label">LIVE FUTURES PRICE</div>
+        <div id="price" class="price-value">$0.00</div>
+    </div>
+</div>
+
+
+<!-- 1 HOUR FORECAST -->
+
+<div class="card">
+
+<div class="title">⏳ Upcoming 1-Hour Forecast</div>
+
+<div class="forecast">
+
+    <div id="direction" class="direction">
+        COLLECTING DATA
+    </div>
+
+    <div id="probability" class="probability">
+        --%
+    </div>
+
+    <div class="bar">
+        <div id="riseBar" class="rise-bar"></div>
+    </div>
+
+    <div class="grid">
+
+        <div class="metric">
+            <div class="metric-label">RISE CHANCE</div>
+            <div id="rise" class="metric-value green">--%</div>
+        </div>
+
+        <div class="metric">
+            <div class="metric-label">FALL CHANCE</div>
+            <div id="fall" class="metric-value red">--%</div>
+        </div>
+
+    </div>
+
+    <div class="timer">Prediction locked until</div>
+
+    <div id="validUntil" class="blue">--</div>
+
+    <div id="countdown" class="timer">
+        Waiting...
+    </div>
+
+</div>
+
+<div id="signal" class="signal no-trade">
+    COLLECTING DATA
+</div>
+
+<div class="small">
+    Live data can change every second, but the 1-hour
+    prediction remains locked until the prediction expires.
+</div>
+
+</div>
+
+
+<!-- INDICATORS -->
+
+<div class="card">
+
+<div class="title">📊 Weighted Indicators</div>
+
+<div class="row">
+    <span>EMA Trend (25%)</span>
+    <span id="ema">--</span>
+</div>
+
+<div class="row">
+    <span>Momentum (20%)</span>
+    <span id="momentum">--</span>
+</div>
+
+<div class="row">
+    <span>RSI (15%)</span>
+    <span id="rsi">--</span>
+</div>
+
+<div class="row">
+    <span>MACD (15%)</span>
+    <span id="macd">--</span>
+</div>
+
+<div class="row">
+    <span>Volatility (10%)</span>
+    <span id="volatility">--</span>
+</div>
+
+<div class="row">
+    <span>Order Flow (15%)</span>
+    <span id="flow">--</span>
+</div>
+
+<div id="score" class="score">0</div>
+
+<div class="small" style="text-align:center">
+    Weighted market score
+</div>
+
+</div>
+
+
+<!-- LIVE ORDER FLOW -->
+
+<div class="card">
+
+<div class="title">⚡ Live Micro Pressure</div>
+
+<div class="grid">
+
+<div class="metric">
+    <div class="metric-label">BUY PRESSURE</div>
+    <div id="buy" class="metric-value green">50%</div>
+</div>
+
+<div class="metric">
+    <div class="metric-label">SELL PRESSURE</div>
+    <div id="sell" class="metric-value red">50%</div>
+</div>
+
+</div>
+
+<div class="small">
+    This section changes with live trades.
+    It does not change the locked 1-hour prediction.
+</div>
+
+</div>
+
+
+<!-- TRACK RECORD -->
+
+<div class="card">
+
+<div class="title">🎯 Prediction Track Record</div>
+
+<div class="grid">
+
+<div class="metric">
+    <div class="metric-label">PREDICTIONS</div>
+    <div id="total" class="metric-value blue">0</div>
+</div>
+
+<div class="metric">
+    <div class="metric-label">CORRECT</div>
+    <div id="correct" class="metric-value green">0</div>
+</div>
+
+<div class="metric">
+    <div class="metric-label">WRONG</div>
+    <div id="wrong" class="metric-value red">0</div>
+</div>
+
+<div class="metric">
+    <div class="metric-label">HIT RATE</div>
+    <div id="hitRate" class="metric-value yellow">--%</div>
+</div>
+
+</div>
+
+<div class="small">
+    The hit rate is calculated from completed predictions.
+    The system does not assume a 70% success rate.
+</div>
+
+</div>
+
+
+<button onclick="newPrediction()">
+    Generate New 1H Prediction
+</button>
+
+</div>
+
+
+<script>
+
+/*
+=====================================================
+CRYPTO 1-HOUR PROBABILITY ENGINE
+=====================================================
+
+DATA:
+
+• Binance Futures 1H candles
+• Live Binance Futures trades
+
+INDICATORS:
+
+• EMA trend
+• RSI
+• MACD
+• Momentum
+• Volatility
+• Buy/Sell order flow
+
+IMPORTANT:
+
+The probability is an estimated model score.
+It is NOT a guarantee.
+
+The 1H prediction is LOCKED for one hour.
+The live buy/sell pressure can still change.
+=====================================================
+*/
+
+
+let ws = null;
+
+let symbol = "BTCUSDT";
+
+let candles = [];
+
+let price = 0;
+
+let buyVolume = 0;
+let sellVolume = 0;
+
+let buyPressure = 50;
+let sellPressure = 50;
+
+let prediction = null;
+
+let predictionEnd = 0;
+
+let history = [];
+
+
+/* ==============================
+   STATUS
+============================== */
+
+function status(text,type){
+
+    const e =
+        document.getElementById("status");
+
+    e.innerText = text;
+
+    e.className =
+        "badge " + type;
+}
+
+
+/* ==============================
+   PRICE FORMAT
+============================== */
+
+function formatPrice(x){
+
+    if(x < 0.1)
+        return x.toFixed(6);
+
+    if(x < 1)
+        return x.toFixed(4);
+
+    return x.toFixed(2);
+}
+
+
+/* ==============================
+   EMA
+============================== */
+
+function EMA(values,period){
+
+    if(values.length < period)
+        return null;
+
+    const multiplier =
+        2 / (period + 1);
+
+    let ema =
+        values
+        .slice(0,period)
+        .reduce((a,b)=>a+b,0)
+        / period;
+
+    for(
+        let i=period;
+        i<values.length;
+        i++
+    ){
+
+        ema =
+            ((values[i]-ema)
+            * multiplier)
+            + ema;
+    }
+
+    return ema;
+}
+
+
+/* ==============================
+   RSI
+============================== */
+
+function RSI(values,period=14){
+
+    if(values.length < period+1)
+        return 50;
+
+    let gains = 0;
+    let losses = 0;
+
+    for(
+        let i=values.length-period;
+        i<values.length;
+        i++
+    ){
+
+        const d =
+            values[i]-values[i-1];
+
+        if(d>0)
+            gains += d;
+        else
+            losses += Math.abs(d);
+    }
+
+    if(losses===0)
+        return 100;
+
+    const rs =
+        (gains/period) /
+        (losses/period);
+
+    return 100-(100/(1+rs));
+}
+
+
+/* ==============================
+   MACD
+============================== */
+
+function MACD(values){
+
+    const e12 =
+        EMA(values,12);
+
+    const e26 =
+        EMA(values,26);
+
+    if(e12===null || e26===null)
+        return 0;
+
+    return e12-e26;
+}
+
+
+/* ==============================
+   MOMENTUM
+============================== */
+
+function Momentum(values){
+
+    if(values.length<7)
+        return 0;
+
+    const old =
+        values[values.length-7];
+
+    const latest =
+        values[values.length-1];
+
+    return ((latest-old)/old)*100;
+}
+
+
+/* ==============================
+   VOLATILITY
+============================== */
+
+function Volatility(values){
+
+    if(values.length<21)
+        return 0;
+
+    let arr=[];
+
+    for(
+        let i=values.length-20;
+        i<values.length;
+        i++
+    ){
+
+        arr.push(
+            Math.abs(
+                ((values[i]-values[i-1])
+                /values[i-1])*100
+            )
+        );
+    }
+
+    return arr.reduce(
+        (a,b)=>a+b,0
+    )/arr.length;
+}
+
+
+/* ==============================
+   ANALYZE MARKET
+============================== */
+
+function analyze(){
+
+    if(candles.length<30)
+        return null;
+
+    const closes =
+        candles.map(x=>x.close);
+
+    const ema20 =
+        EMA(closes,20);
+
+    const ema50 =
+        EMA(closes,30);
+
+    const rsi =
+        RSI(closes);
+
+    const macd =
+        MACD(closes);
+
+    const momentum =
+        Momentum(closes);
+
+    const volatility =
+        Volatility(closes);
+
+
+    /* TREND */
+
+    let trendScore=0;
+
+    if(
+        price>ema20 &&
+        ema20>ema50
+    )
+        trendScore=1;
+
+    else if(
+        price<ema20 &&
+        ema20<ema50
+    )
+        trendScore=-1;
+
+    else if(price>ema20)
+        trendScore=.5;
+
+    else if(price<ema20)
+        trendScore=-.5;
+
+
+    /* RSI */
+
+    let rsiScore=0;
+
+    if(rsi>=55 && rsi<=70)
+        rsiScore=1;
+
+    else if(rsi>=30 && rsi<=45)
+        rsiScore=-1;
+
+    else if(rsi>70)
+        rsiScore=-.5;
+
+    else if(rsi<30)
+        rsiScore=.5;
+
+
+    /* MACD */
+
+    let macdScore=0;
+
+    if(macd>0)
+        macdScore=1;
+
+    else if(macd<0)
+        macdScore=-1;
+
+
+    /* MOMENTUM */
+
+    let momentumScore=0;
+
+    if(momentum>.15)
+        momentumScore=1;
+
+    else if(momentum<-.15)
+        momentumScore=-1;
+
+
+    /* VOLATILITY */
+
+    let volatilityScore=0;
+
+    if(volatility<1.5)
+        volatilityScore=.5;
+
+    else if(volatility>4)
+        volatilityScore=-.5;
+
+
+    /*
+       IMPORTANT:
+       High volatility is treated as
+       lower confidence, not automatically
+       as a rise or fall.
+    */
+
+
+    /* ORDER FLOW */
+
+    let flowScore=0;
+
+    if(
+        buyPressure >
+        sellPressure+5
+    )
+        flowScore=1;
+
+    else if(
+        sellPressure >
+        buyPressure+5
+    )
+        flowScore=-1;
+
+
+    /* WEIGHTED SCORE */
+
+    const score =
+
+        trendScore*.25
+
+        +
+
+        momentumScore*.20
+
+        +
+
+        rsiScore*.15
+
+        +
+
+        macdScore*.15
+
+        +
+
+        volatilityScore*.10
+
+        +
+
+        flowScore*.15;
+
+
+    return {
+        score,
+        trendScore,
+        momentumScore,
+        rsiScore,
+        macdScore,
+        volatilityScore,
+        flowScore,
+        rsi,
+        macd,
+        momentum,
+        volatility
+    };
+}
+
+
+/* ==============================
+   SCORE → PROBABILITY
+============================== */
+
+function probability(score){
+
+    /*
+       Approximately:
+
+       score +1  → 90%
+       score  0  → 50%
+       score -1  → 10%
+
+       This is a model estimate.
+       It is NOT yet statistically calibrated.
+    */
+
+    return Math.max(
+        10,
+        Math.min(
+            90,
+            50+(score*40)
+        )
+    );
+}
+
+
+/* ==============================
+   CREATE PREDICTION
+============================== */
+
+function createPrediction(){
+
+    const a =
+        analyze();
+
+    if(!a)
+        return;
+
+
+    const rise =
+        probability(a.score);
+
+    const fall =
+        100-rise;
+
+
+    let direction =
+        "NO TRADE";
+
+
+    /*
+       We only show a directional
+       signal when estimated probability
+       is at least 65%.
+    */
+
+    if(rise>=65)
+        direction="RISE";
+
+    else if(fall>=65)
+        direction="FALL";
+
+
+    /*
+       Evaluate previous prediction
+       before replacing it.
+    */
+
+    if(prediction)
+        evaluate();
+
+
+    prediction = {
+
+        direction,
+        rise,
+        fall,
+        startPrice:price,
+        created:Date.now(),
+        analysis:a
+    };
+
+
+    /*
+       LOCK FOR ONE HOUR
+    */
+
+    predictionEnd =
+        Date.now()+
+        60*60*1000;
+
+
+    display();
+
+    updateHistory();
+}
+
+
+/* ==============================
+   DISPLAY PREDICTION
+============================== */
+
+function display(){
+
+    if(!prediction)
+        return;
+
+    const p=prediction;
+
+    document.getElementById("rise").innerText =
+        p.rise.toFixed(1)+"%";
+
+    document.getElementById("fall").innerText =
+        p.fall.toFixed(1)+"%";
+
+
+    document.getElementById("probability").innerText =
+        Math.max(p.rise,p.fall)
+        .toFixed(1)+"%";
+
+
+    document.getElementById("riseBar").style.width =
+        p.rise+"%";
+
+
+    const d =
+        document.getElementById("direction");
+
+
+    if(p.direction==="RISE"){
+
+        d.innerText="📈 RISE";
+        d.className="direction green";
+
+    }
+
+    else if(p.direction==="FALL"){
+
+        d.innerText="📉 FALL";
+        d.className="direction red";
+
+    }
+
+    else{
+
+        d.innerText="⏸ NO TRADE";
+        d.className="direction yellow";
+
+    }
+
+
+    const s =
+        document.getElementById("signal");
+
+
+    if(p.direction==="NO TRADE"){
+
+        s.innerText =
+            "NO TRADE — SIGNAL TOO WEAK";
+
+        s.className =
+            "signal no-trade";
+
+    }
+
+    else{
+
+        s.innerText =
+            p.direction+
+            " — 1H PREDICTION LOCKED";
+
+        s.className =
+            "signal trade";
+    }
+
+
+    document.getElementById("validUntil").innerText =
+        new Date(predictionEnd)
+        .toLocaleTimeString();
+
+
+    const a=p.analysis;
+
+
+    document.getElementById("ema").innerText =
+        a.trendScore>0
+        ?"BULLISH"
+        :a.trendScore<0
+        ?"BEARISH"
+        :"NEUTRAL";
+
+
+    document.getElementById("rsi").innerText =
+        a.rsi.toFixed(1);
+
+
+    document.getElementById("macd").innerText =
+        a.macd>0
+        ?"BULLISH"
+        :a.macd<0
+        ?"BEARISH"
+        :"NEUTRAL";
+
+
+    document.getElementById("momentum").innerText =
+        a.momentum.toFixed(2)+"%";
+
+
+    document.getElementById("volatility").innerText =
+        a.volatility.toFixed(2)+"%";
+
+
+    document.getElementById("flow").innerText =
+        a.flowScore>0
+        ?"BUY"
+        :a.flowScore<0
+        ?"SELL"
+        :"NEUTRAL";
+
+
+    document.getElementById("score").innerText =
+        (a.score*100).toFixed(1);
+}
+
+
+/* ==============================
+   LOAD HISTORICAL DATA
+============================== */
+
+async function loadData(){
+
+    try{
+
+        status("LOADING DATA","loading");
+
+        const url =
+            "https://fapi.binance.com/fapi/v1/klines"+
+            "?symbol="+symbol+
+            "&interval=1h"+
+            "&limit=100";
+
+
+        const response =
+            await fetch(url);
+
+
+        if(!response.ok)
+            throw new Error(
+                "Binance HTTP "+response.status
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if(
+            !Array.isArray(data) ||
+            data.length<30
+        )
+            throw new Error(
+                "Not enough candle data"
+            );
+
+
+        candles =
+            data.map(k=>({
+
+                time:Number(k[0]),
+                open:parseFloat(k[1]),
+                high:parseFloat(k[2]),
+                low:parseFloat(k[3]),
+                close:parseFloat(k[4]),
+                volume:parseFloat(k[5])
+
+            }));
+
+
+        price =
+            candles[candles.length-1].close;
+
+
+        document.getElementById("price").innerText =
+            "$"+formatPrice(price);
+
+
+        status("LIVE","live");
+
+
+        connect();
+
+
+        createPrediction();
+
+    }
+
+    catch(error){
+
+        console.error(error);
+
+        status("DATA ERROR","offline");
+
+        document.getElementById("direction").innerText =
+            "DATA ERROR";
+
+        document.getElementById("signal").innerText =
+            "Could not load Binance data";
+
+    }
+}
+
+
+/* ==============================
+   WEBSOCKET
+============================== */
+
+function connect(){
+
+    if(ws){
+
+        try{
+            ws.close();
+        }
+        catch(e){}
+    }
+
+
+    const s =
+        symbol.toLowerCase();
+
+
+    const url =
+        "wss://fstream.binance.com/stream?streams="+
+        s+"@aggTrade/"+
+        s+"@kline_1m";
+
+
+    ws =
+        new WebSocket(url);
+
+
+    ws.onopen=function(){
+
+        status("LIVE STREAM","live");
+
+    };
+
+
+    ws.onmessage=function(event){
+
+        try{
+
+            const msg =
+                JSON.parse(event.data);
+
+
+            if(!msg.data)
+                return;
+
+
+            if(
+                msg.data.e==="aggTrade"
+            ){
+
+                processTrade(
+                    msg.data
+                );
+
+            }
+
+
+            if(
+                msg.data.e==="kline"
+            ){
+
+                processKline(
+                    msg.data.k
+                );
+
+            }
+
+        }
+
+        catch(error){
+
+            console.error(
+                "WebSocket error",
+                error
+            );
+
+        }
+    };
+
+
+    ws.onerror=function(error){
+
+        console.error(
+            "WebSocket error",
+            error
+        );
+
+    };
+
+
+    ws.onclose=function(){
+
+        status(
+            "DISCONNECTED",
+            "offline"
+        );
+
+    };
+}
+
+
+/* ==============================
+   LIVE TRADE PRESSURE
+============================== */
+
+function processTrade(data){
+
+    const qty =
+        parseFloat(data.q);
+
+
+    if(!Number.isFinite(qty))
+        return;
+
+
+    if(data.m)
+        sellVolume+=qty;
+
+    else
+        buyVolume+=qty;
+
+
+    /*
+       Recent trades get more weight.
+    */
+
+    buyVolume*=.995;
+    sellVolume*=.995;
+
+
+    const total =
+        buyVolume+sellVolume;
+
+
+    if(total>0){
+
+        buyPressure =
+            (buyVolume/total)*100;
+
+        sellPressure =
+            100-buyPressure;
+
+    }
+
+
+    document.getElementById("buy").innerText =
+        buyPressure.toFixed(1)+"%";
+
+
+    document.getElementById("sell").innerText =
+        sellPressure.toFixed(1)+"%";
+
+
+    /*
+       DO NOT call createPrediction()
+       here.
+
+       Therefore the 1H forecast
+       does NOT flip every second.
+    */
+}
+
+
+/* ==============================
+   LIVE PRICE
+============================== */
+
+function processKline(k){
+
+    price =
+        parseFloat(k.c);
+
+
+    document.getElementById("price").innerText =
+        "$"+formatPrice(price);
+
+
+    /*
+       Only the live price is updated here.
+
+       The locked 1H prediction remains unchanged.
+    */
+
+
+    if(
+        prediction &&
+        Date.now()>=predictionEnd
+    ){
+
+        refreshData();
+
+    }
+}
+
+
+/* ==============================
+   REFRESH AFTER 1 HOUR
+============================== */
+
+let refreshing=false;
+
+async function refreshData(){
+
+    if(refreshing)
+        return;
+
+    refreshing=true;
+
+    try{
+
+        const url =
+            "https://fapi.binance.com/fapi/v1/klines"+
+            "?symbol="+symbol+
+            "&interval=1h"+
+            "&limit=100";
+
+
+        const response =
+            await fetch(url);
+
+
+        const data =
+            await response.json();
+
+
+        candles =
+            data.map(k=>({
+
+                time:Number(k[0]),
+                open:parseFloat(k[1]),
+                high:parseFloat(k[2]),
+                low:parseFloat(k[3]),
+                close:parseFloat(k[4]),
+                volume:parseFloat(k[5])
+
+            }));
+
+
+        createPrediction();
+
+    }
+
+    catch(error){
+
+        console.error(
+            "Refresh error",
+            error
+        );
+
+    }
+
+    finally{
+
+        refreshing=false;
+
+    }
+}
+
+
+/* ==============================
+   EVALUATE COMPLETED PREDICTION
+============================== */
+
+function evaluate(){
+
+    if(
+        !prediction ||
+        !price
+    )
+        return;
+
+
+    if(
+        prediction.direction===
+        "NO TRADE"
+    )
+        return;
+
+
+    let actual="FLAT";
+
+
+    if(price>prediction.startPrice)
+        actual="RISE";
+
+    else if(price<prediction.startPrice)
+        actual="FALL";
+
+
+    history.push({
+
+        predicted:
+            prediction.direction,
+
+        actual:actual,
+
+        correct:
+            prediction.direction===actual
+
+    });
+
+
+    /*
+       Keep latest 500 results.
+    */
+
+    if(history.length>500)
+        history.shift();
+}
+
+
+/* ==============================
+   TRACK RECORD
+============================== */
+
+function updateHistory(){
+
+    const total =
+        history.length;
+
+
+    const correct =
+        history.filter(
+            x=>x.correct
+        ).length;
+
+
+    const wrong =
+        total-correct;
+
+
+    const rate =
+        total
+        ?(correct/total)*100
+        :0;
+
+
+    document.getElementById("total").innerText =
+        total;
+
+
+    document.getElementById("correct").innerText =
+        correct;
+
+
+    document.getElementById("wrong").innerText =
+        wrong;
+
+
+    document.getElementById("hitRate").innerText =
+        total
+        ?rate.toFixed(1)+"%"
+        :"--%";
+}
+
+
+/* ==============================
+   COUNTDOWN
+============================== */
+
+setInterval(function(){
+
+    if(!prediction){
+
+        document.getElementById("countdown").innerText =
+            "Waiting...";
+
+        return;
+    }
+
+
+    const remaining =
+        predictionEnd-Date.now();
+
+
+    if(remaining<=0){
+
+        document.getElementById("countdown").innerText =
+            "Prediction expired — refreshing";
+
+        return;
+    }
+
+
+    const seconds =
+        Math.floor(
+            remaining/1000
+        );
+
+
+    const h =
+        Math.floor(
+            seconds/3600
+        );
+
+
+    const m =
+        Math.floor(
+            (seconds%3600)/60
+        );
+
+
+    const s =
+        seconds%60;
+
+
+    document.getElementById("countdown").innerText =
+        "Remaining: "+
+        h+"h "+
+        m+"m "+
+        s+"s";
+
+
+},1000);
+
+
+/* ==============================
+   MANUAL NEW PREDICTION
+============================== */
+
+function newPrediction(){
+
+    if(candles.length<30){
+
+        alert(
+            "Please wait for Binance data."
+        );
+
+        return;
+    }
+
+
+    prediction=null;
+    predictionEnd=0;
+
+    createPrediction();
+}
+
+
+/* ==============================
+   SYMBOL CHANGE
+============================== */
+
+document.getElementById("symbol")
+.addEventListener(
+    "change",
+    async function(){
+
+        symbol=this.value;
+
+        candles=[];
+
+        prediction=null;
+
+        predictionEnd=0;
+
+        price=0;
+
+        buyVolume=0;
+        sellVolume=0;
+
+        buyPressure=50;
+        sellPressure=50;
+
+
+        document.getElementById("price").innerText =
+            "$0.00";
+
+        document.getElementById("direction").innerText =
+            "COLLECTING DATA";
+
+        document.getElementById("probability").innerText =
+            "--%";
+
+        document.getElementById("rise").innerText =
+            "--%";
+
+        document.getElementById("fall").innerText =
+            "--%";
+
+        document.getElementById("riseBar").style.width =
+            "50%";
+
+
+        await loadData();
+
+    }
+);
+
+
+/* ==============================
+   START
+============================== */
+
+loadData();
+
+</script>
+
+</body>
+</html>
